@@ -1,0 +1,8 @@
+beautifulsoup4
+selenium
+jupyter
+pandas
+pytest
+mypy
+types-requests
+types-beautifulsoup4
