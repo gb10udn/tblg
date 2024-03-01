@@ -1,12 +1,13 @@
-from typing import List
 import requests
 from bs4 import BeautifulSoup
+from typing import Any
+import re
 
 
 class EachPage:
     def __init__(self, url: str):
         """
-        各ページでの処理と値を記述する。
+        個別ページでの処理と値を記述する。
         """
         self._url = url
         response = requests.get(self._url)
@@ -14,9 +15,9 @@ class EachPage:
         self._soup = BeautifulSoup(response.text, 'html.parser')
 
 
-    def _fetch_info_from_table(self, items: List[str]|str) -> dict[str, str | None]:
+    def _fetch_info_from_table(self, items: list[str] | str) -> dict[str, str | None]:
         """
-        個別ページのテーブル要素から、必要情報を取得する。
+        テーブル要素から、必要情報を取得する。
         必要情報は、item で定義し、table 要素の tr と一致した場合にその値を返す。
         """
         if type(items) == str:
@@ -31,4 +32,53 @@ class EachPage:
                 if (th is not None) and (td is not None) and th.text in items:
                     result[th.text] = td.text.strip()
 
+        return result
+    
+
+    def _fetch_rating_and_kuchikomi_num_and_bookmarked_num(self) -> dict[str, int | float | None]:
+        """
+        ヘッダ部から、評価点、口コミ数、ブックマーク登録数を取得する。
+        """
+        result: dict = {
+            'rating': None,
+            'kuchikomi_num': None,
+            'bookmarked_num': None,
+        }
+
+        IDX = {
+            'rating': 0,
+            'kuchikomi_num': 1,
+            'bookmarked_num': 2,
+        }
+
+        header = self._soup.find(id='js-header-rating')
+        if header is None:
+            return result
+        
+        li_list = header.find_all('li')
+        if li_list is None:
+            return result
+        
+        for idx, li in enumerate(li_list):
+            text = li.text.strip()
+
+            try:
+                if idx == IDX['rating']:
+                    rating_list = re.findall('[0-9]{1}.[0-9]{2}', text)
+                    rating = float(rating_list[0])
+                    result['rating'] = rating
+                
+                elif idx == IDX['kuchikomi_num']:
+                    kuchikomi_num_list = re.findall('[0-9]{1}.[0-9]{2}|[0-9]{1,10}', text)
+                    kuchikomi_num = int(kuchikomi_num_list[0])
+                    result['kuchikomi_num'] = kuchikomi_num
+                
+                elif idx == IDX['bookmarked_num']:
+                    bookmarked_num_list = re.findall('[0-9]{1}.[0-9]{2}|[0-9]{1,10}', text)
+                    bookmarked_num = int(bookmarked_num_list[0])
+                    result['bookmarked_num'] = bookmarked_num
+
+            except:
+                pass  # HACK: 240301 デバッグ時に気づきにくいので注意。
+                
         return result
