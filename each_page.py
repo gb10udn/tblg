@@ -1,6 +1,5 @@
 import requests
 from bs4 import BeautifulSoup
-from typing import Any
 import re
 
 
@@ -30,7 +29,7 @@ class EachPage:
                 th = tr.find('th')
                 td = tr.find('td')
                 if (th is not None) and (td is not None) and th.text in items:
-                    result[th.text] = td.text.strip()
+                    result[th.text] = td.text.strip()  # TODO: 240301 場合によっては、パーサーいるかも？
 
         return result
     
@@ -64,7 +63,7 @@ class EachPage:
 
             try:
                 if idx == IDX['rating']:
-                    rating_list = re.findall('[0-9]{1}.[0-9]{2}', text)
+                    rating_list = re.findall('[0-9]{1}.[0-9]{2}', text)  # HACK: 240301 同じ変数を重ねて宣言しても mypy でエラーにならないようにせよ。
                     rating = float(rating_list[0])
                     result['rating'] = rating
                 
@@ -79,6 +78,21 @@ class EachPage:
                     result['bookmarked_num'] = bookmarked_num
 
             except:
-                pass  # HACK: 240301 デバッグ時に気づきにくいので注意。
+                pass  # HACK: 240301 デバッグ時に気付きにくいかも。対策必要。
                 
         return result
+
+
+def fetch_info_from_each_page(url: str, *, items=['店名', 'オープン日']) -> dict | None:
+    """
+    詳細の記載ある各ページから必要情報を取得する。
+    """
+    try:
+        ep = EachPage(url)
+    except:
+        return None
+    
+    result: dict = {'url': url}
+    result.update(ep._fetch_info_from_table(items))
+    result.update(ep._fetch_rating_and_kuchikomi_num_and_bookmarked_num())
+    return result
