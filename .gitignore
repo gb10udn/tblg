@@ -3,3 +3,4 @@
 /.mypy_cache
 /.venv
 *.ipynb
+tests/__pycache__
