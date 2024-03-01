@@ -21,3 +21,22 @@ class ListPage:
             return []
         else:
             return [a['href'] for a in a_list]
+    
+
+    def fetch_total_url_num(self) -> int | None:
+        """
+        全何件が検索結果として表示されているかを確認する。
+        """
+        div_list = self._soup.find_all('div', class_='c-page-count')
+        if div_list is None or len(div_list) > 1:
+            return None
+        
+        div = div_list[0]  # INFO: 240302 ここの要素は１つだけの想定
+        span_list = div.find_all('span', class_='c-page-count__num')
+        if span_list is None:
+            return None
+        
+        try:
+            return int(span_list[-1].text.strip())
+        except:
+            return None

@@ -9,7 +9,7 @@ import time
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # INFO: 220818 CORS
+    allow_origins=["*"],  # INFO: 240302 for CORS
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"], 
@@ -29,10 +29,6 @@ def run():
 
 
 global driver
-
-port_num = 5000
-
-
 
 
 def update_button(*, sleep_time=0.5):
