@@ -2,6 +2,9 @@ beautifulsoup4
 selenium
 jupyter
 pandas
+fastapi
+uvicorn[standard]
+
 pytest
 mypy
 types-requests
