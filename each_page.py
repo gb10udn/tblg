@@ -14,7 +14,7 @@ class EachPage:
         self._soup = BeautifulSoup(response.text, 'html.parser')
 
 
-    def _fetch_info_from_table(self, items: list[str] | str) -> dict[str, str | None]:
+    def fetch_info_from_table(self, items: list[str] | str) -> dict[str, str | None]:
         """
         テーブル要素から、必要情報を取得する。
         必要情報は、item で定義し、table 要素の tr と一致した場合にその値を返す。
@@ -34,7 +34,7 @@ class EachPage:
         return result
     
 
-    def _fetch_rating_and_kuchikomi_num_and_bookmarked_num(self) -> dict[str, int | float | None]:
+    def fetch_rating_and_kuchikomi_num_and_bookmarked_num(self) -> dict[str, int | float | None]:
         """
         ヘッダ部から、評価点、口コミ数、ブックマーク登録数を取得する。
         """
@@ -93,6 +93,6 @@ def fetch_info_from_each_page(url: str, *, items=['店名', 'オープン日']) 
         return None
     
     result: dict = {'url': url}
-    result.update(ep._fetch_info_from_table(items))
-    result.update(ep._fetch_rating_and_kuchikomi_num_and_bookmarked_num())
+    result.update(ep.fetch_info_from_table(items))
+    result.update(ep.fetch_rating_and_kuchikomi_num_and_bookmarked_num())
     return result
