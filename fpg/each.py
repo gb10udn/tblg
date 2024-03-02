@@ -1,5 +1,5 @@
 import requests
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, NavigableString
 import re
 
 
@@ -10,7 +10,7 @@ class EachPage:
         """
         self._url = url
         response = requests.get(self._url)
-        assert response.ok, f'fail to access -> "{self._url}"'  # HACK: 240301 初期化失敗は、これを操作する関数が処理するものとする。
+        assert response.ok, f'fail to access -> "{self._url}"'  # HACK: 240302 ネットワーク系のエラーは独自クラスを作って処理するのがいいかも？
         self._soup = BeautifulSoup(response.text, 'html.parser')
 
 
@@ -54,7 +54,7 @@ class EachPage:
         if header is None:
             return result
         
-        li_list = header.find_all('li')
+        li_list = header.find_all('li')  # HACK: 240302 mypy のエラーを落とすこと。 ref: https://stackoverflow.com/questions/7591535/beautifulsoup-attributeerror-navigablestring-object-has-no-attribute-name
         if li_list is None:
             return result
         

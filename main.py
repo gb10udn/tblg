@@ -4,6 +4,7 @@ from selenium import webdriver
 import uvicorn
 import threading
 import time
+import pandas as pd  # HACK: 240302 pyinstaller 的に重くなるので、sqlalchemy でやるなどしたらいいかも？
 
 import fpg
 
@@ -29,10 +30,18 @@ def run():
     print('処理開始')
     
     url = driver.current_url
-    lp = fpg.list.ListPage(url)
-    all_list_page_urls = lp.fetch_all_urls()
+    all_list_urls = fpg.list.fetch_all_list_page_urls(url)
 
-    pass  # TODO: 240302 各ページ、並行処理で必要データを取得する。
+    result = []
+    for list_url in all_list_urls:  # HACK: 240302 少し遅いので、並行処理でやるといいかも？また、フロントエンドに処理状況を渡すといいかも？
+        each_urls = fpg.list.fetch_all_each_page_urls(list_url)
+        for each_url in each_urls:
+            temp_result = fpg.each.fetch_info_from_each_page(each_url)
+            if temp_result is not None:
+                result.append(temp_result)
+    
+    result = pd.DataFrame(result)
+    result.to_csv('test_.csv', encoding='shift-jis')  # TODO: 240302 ファイル名に検索や、プログラムバージョンを含めるといいかも？
 
 
 ####

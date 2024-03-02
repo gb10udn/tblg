@@ -15,7 +15,7 @@ class ListPage:
         self._soup = BeautifulSoup(response.text, 'html.parser')
 
 
-    def fetch_each_page_url_list(self) -> list[str]:
+    def fetch_all_each_page_urls(self) -> list[str]:
         a_list = self._soup.find_all(name='a', class_='list-rst__rst-name-target')
         if a_list is None:
             return []
@@ -23,9 +23,10 @@ class ListPage:
             return [a['href'] for a in a_list]
     
 
-    def fetch_total_url_num(self) -> int | None:
+    def _fetch_total_url_num(self) -> int | None:
         """
         全何件が検索結果として表示されているかを確認する。
+        bs4 で値取得に失敗すると、None を返す。(ページの DOM 要素が更新されて失敗したケースを想定。)
         """
         div_list = self._soup.find_all('div', class_='c-page-count')
         if div_list is None or len(div_list) > 1:
@@ -42,12 +43,36 @@ class ListPage:
             return None
     
 
-    def fetch_all_urls(self):
+    def fetch_all_list_page_urls(self) -> list[str]:
         """
         (今、自分自身が 1 ページ目にいると仮定して) url を全件取得する。
         """
         pass  # HACK: 240302 url が 1 ページ目と assert する or Selenium で １ページ目に移動させる？(Fast API 経由で。現状はボタンが生成しない。)
         li_list = self._soup.find_all('li', class_='c-pagination__item')
         url = li_list[1].find('a')['href']
-        page_max = math.ceil(self.fetch_total_url_num() / 20)
-        return [self._url, url] + [url.replace('rstLst/2', f'rstLst/{i}') for i in range(3, page_max + 1)]
+
+        total_url_num = self._fetch_total_url_num()
+        if total_url_num is not None:
+            page_max = math.ceil(total_url_num / 20)
+            return [self._url, url] + [url.replace('rstLst/2', f'rstLst/{i}') for i in range(3, page_max + 1)]
+        else:
+            return []
+
+
+####
+    
+
+def fetch_all_list_page_urls(url: str) -> list[str]:
+    try:
+        list_page = ListPage(url)
+        return list_page.fetch_all_list_page_urls()
+    except:
+        return []
+    
+
+def fetch_all_each_page_urls(url: str) -> list[str]:
+    try:
+        list_page = ListPage(url)
+        return list_page.fetch_all_each_page_urls()
+    except:
+        return []

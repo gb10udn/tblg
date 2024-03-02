@@ -4,5 +4,6 @@
 /.venv
 *.ipynb
 *.exe
+*.csv
 tests/__pycache__
 fpg/__pycache__

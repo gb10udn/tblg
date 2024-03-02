@@ -9,3 +9,4 @@ pytest
 mypy
 types-requests
 types-beautifulsoup4
+pandas-stubs
