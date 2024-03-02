@@ -33,16 +33,16 @@ def run():
     all_list_urls = fpg.list.fetch_all_list_page_urls(url)
 
     result = []
-    for list_url_idx, list_url in enumerate(all_list_urls):  # HACK: 240302 少し遅いので、並行処理でやるといいかも？また、フロントエンドに処理状況を渡すといいかも？
+    for list_idx, list_url in enumerate(all_list_urls):  # HACK: 240302 少し遅いので、並行処理でやるといいかも？また、フロントエンドに処理状況を渡すといいかも？
         each_urls = fpg.list.fetch_all_each_page_urls(list_url)
-        for each_url_idx, each_url in enumerate(each_urls):
-            basic_data_dict = {
-                'list_url_idx': list_url_idx,  # INFO: 240302 並行処理で後から並び替え用にも使用
-                'each_url_idx': each_url_idx,
+        for each_idx, each_url in enumerate(each_urls):
+            temp_result = {
+                'list_idx': list_idx,  # INFO: 240302 並行処理で後から並び替え用にも使用
+                'each_idx': each_idx,
             }
-            temp_result = fpg.each.fetch_info_from_each_page(each_url)
-            if temp_result is not None:
-                temp_result = basic_data_dict.update(temp_result)
+            temp = fpg.each.fetch_info_from_each_page(each_url)
+            if temp is not None:
+                temp_result.update(temp)
                 result.append(temp_result)  # TODO: 240302 都度データ書き込みがいいかも？sqlite とかに。もしくは、csv に書き足してもいいかも？
     
     result = pd.DataFrame(result)
