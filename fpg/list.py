@@ -49,14 +49,20 @@ class ListPage:
         """
         pass  # HACK: 240302 url が 1 ページ目と assert する or Selenium で １ページ目に移動させる？(Fast API 経由で。現状はボタンが生成しない。)
         li_list = self._soup.find_all('li', class_='c-pagination__item')
-        url = li_list[1].find('a')['href']
+        
+        if len(li_list) == 0:
+            first_page_url = self._url
+            return [first_page_url]
 
-        total_url_num = self._fetch_total_url_num()
-        if total_url_num is not None:
-            page_max = math.ceil(total_url_num / 20)
-            return [self._url, url] + [url.replace('rstLst/2', f'rstLst/{i}') for i in range(3, page_max + 1)]
         else:
-            return []
+            second_page_url = li_list[1].find('a')['href']
+            total_url_num = self._fetch_total_url_num()
+            if total_url_num is not None:
+                page_max = math.ceil(total_url_num / 20)
+                first_page_url = self._url
+                return [first_page_url, second_page_url] + [second_page_url.replace('rstLst/2', f'rstLst/{i}') for i in range(3, page_max + 1)]
+            else:
+                return []
 
 
 ####

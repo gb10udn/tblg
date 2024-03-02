@@ -83,7 +83,7 @@ class EachPage:
         return result
 
 
-def fetch_info_from_each_page(url: str, *, items=['店名', 'オープン日']) -> dict | None:
+def fetch_info_from_each_page(url: str, *, items=['店名', 'オープン日']) -> dict | None:  # TODO: 240302 '店名' とかは、コンフィグファイルで渡すといいかも？
     """
     詳細の記載ある各ページから必要情報を取得する。
     """

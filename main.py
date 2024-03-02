@@ -20,7 +20,7 @@ app.add_middleware(
 
 @app.get('/')
 def read_root():
-    return {'Hello': 'World'}
+    return 'tblg'
 
 @app.get('/run')
 def run():
@@ -33,12 +33,17 @@ def run():
     all_list_urls = fpg.list.fetch_all_list_page_urls(url)
 
     result = []
-    for list_url in all_list_urls:  # HACK: 240302 少し遅いので、並行処理でやるといいかも？また、フロントエンドに処理状況を渡すといいかも？
+    for list_url_idx, list_url in enumerate(all_list_urls):  # HACK: 240302 少し遅いので、並行処理でやるといいかも？また、フロントエンドに処理状況を渡すといいかも？
         each_urls = fpg.list.fetch_all_each_page_urls(list_url)
-        for each_url in each_urls:
+        for each_url_idx, each_url in enumerate(each_urls):
+            basic_data_dict = {
+                'list_url_idx': list_url_idx,  # INFO: 240302 並行処理で後から並び替え用にも使用
+                'each_url_idx': each_url_idx,
+            }
             temp_result = fpg.each.fetch_info_from_each_page(each_url)
             if temp_result is not None:
-                result.append(temp_result)
+                temp_result = basic_data_dict.update(temp_result)
+                result.append(temp_result)  # TODO: 240302 都度データ書き込みがいいかも？sqlite とかに。もしくは、csv に書き足してもいいかも？
     
     result = pd.DataFrame(result)
     result.to_csv('test_.csv', encoding='shift-jis')  # TODO: 240302 ファイル名に検索や、プログラムバージョンを含めるといいかも？
@@ -56,12 +61,15 @@ def create_button_daemon(*, sleep_time=0.5):
     threading で並行処理として呼ばれる想定。
     """
 
-    JS_SCRIPT = '''let button = document.createElement("button");
-button.innerHTML = "Click me";
-button.onclick = () => {
-fetch("http://localhost:5000/run");
-};
-document.body.insertBefore(button, document.body.firstChild);'''
+    # TODO: 240302 この部分をもう少しリッチにすると、使いやすくなる気がする。
+    JS_SCRIPT = '''
+        let button = document.createElement("button");
+        button.innerHTML = "ダウンロード";
+        button.onclick = () => {
+            fetch("http://localhost:5000/run");
+        };
+        document.body.insertBefore(button, document.body.firstChild);
+    '''
 
     url = ''
     while True:
@@ -82,5 +90,5 @@ if __name__ == '__main__':
 
     try:
         uvicorn.run(app, host="127.0.0.1", port=5000)  # TODO: 240302 空いたポート番号を発見して割り当てるようにせよ。
-    except:
+    finally:
         event.clear()
