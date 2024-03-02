@@ -1,6 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
-import re
+import math
 
 
 class ListPage:
@@ -40,3 +40,14 @@ class ListPage:
             return int(span_list[-1].text.strip())
         except:
             return None
+    
+
+    def fetch_all_urls(self):
+        """
+        (今、自分自身が 1 ページ目にいると仮定して) url を全件取得する。
+        """
+        pass  # HACK: 240302 url が 1 ページ目と assert する or Selenium で １ページ目に移動させる？(Fast API 経由で。現状はボタンが生成しない。)
+        li_list = self._soup.find_all('li', class_='c-pagination__item')
+        url = li_list[1].find('a')['href']
+        page_max = math.ceil(self.fetch_total_url_num() / 20)
+        return [self._url, url] + [url.replace('rstLst/2', f'rstLst/{i}') for i in range(3, page_max + 1)]

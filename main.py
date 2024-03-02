@@ -5,6 +5,8 @@ import uvicorn
 import threading
 import time
 
+import fpg
+
 
 app = FastAPI()
 app.add_middleware(
@@ -21,8 +23,16 @@ def read_root():
 
 @app.get('/run')
 def run():
-    print('ここはきたよおおおおおおおおお')
-    pass  # EDIT: 240302 ダウンロード処理を開始する。
+    """
+    食べログで必要データを取得する処理を開始する。
+    """
+    print('処理開始')
+    
+    url = driver.current_url
+    lp = fpg.list.ListPage(url)
+    all_list_page_urls = lp.fetch_all_urls()
+
+    pass  # TODO: 240302 各ページ、並行処理で必要データを取得する。
 
 
 ####
@@ -31,10 +41,10 @@ def run():
 global driver
 
 
-def update_button(*, sleep_time=0.5):
+def create_button_daemon(*, sleep_time=0.5):
     """
     url が更新されていれば、バックエンドと通信するボタンを設置する関数。
-    threading で並行処理として呼ばれる想定
+    threading で並行処理として呼ばれる想定。
     """
 
     JS_SCRIPT = '''let button = document.createElement("button");
@@ -46,7 +56,7 @@ document.body.insertBefore(button, document.body.firstChild);'''
 
     url = ''
     while True:
-        if driver.current_url != url:
+        if (driver.current_url != url) and ('https://tabelog.com/' in driver.current_url) and ('rstLst/?' in driver.current_url):
             driver.execute_script(JS_SCRIPT)
         url = driver.current_url
         time.sleep(sleep_time)
@@ -57,10 +67,11 @@ if __name__ == '__main__':
     driver.get('https://tabelog.com/')
     
     event = threading.Event()
-    sub_thread = threading.Thread(target=update_button, daemon=True)
+    sub_thread = threading.Thread(target=create_button_daemon, daemon=True)
     sub_thread.start()
     event.set()
 
-    uvicorn.run(app, host="127.0.0.1", port=5000)
-
-    event.clear()
+    try:
+        uvicorn.run(app, host="127.0.0.1", port=5000)  # TODO: 240302 空いたポート番号を発見して割り当てるようにせよ。
+    except:
+        event.clear()
