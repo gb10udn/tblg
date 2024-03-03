@@ -4,7 +4,7 @@ import math
 
 
 class ListPage:
-    def __init__(self, url: str):
+    def __init__(self, url: str):  # TODO: 240303 検索結果を取得して、保存できるようにする。
         """
         一覧ページから、必要な URL を全件取得する。(その後、each_page.py が処理する想定)
         ページ遷移は、この関数の所掌範囲外とする。

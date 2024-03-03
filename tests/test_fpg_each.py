@@ -5,7 +5,7 @@ import fpg
 
 
 def test_fetch_info_from_table():
-    url = 'https://tabelog.com/osaka/A2706/A270604/27020108/'
+    url = 'https://tabelog.com/osaka/A2706/A270604/27020108/'  # HACK: 240303 bs4 の単体テストという意味では、html ファイルからパースするルートがあってもいいと思う。
     ep = fpg.each.EachPage(url)
     result = ep.fetch_info_from_table(['店名'])
     assert result == {'店名': '木曽路 高槻店（キソジ）'}

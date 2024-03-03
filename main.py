@@ -26,27 +26,28 @@ def read_root():
 def run():
     """
     食べログで必要データを取得する処理を開始する。
+
+    240303
+    ------
+    - TODO: 並行処理                     : 現状、1sec/件 でさすがに遅い気がする 
+    - TODO: 処理状況をフロントに通知する : ボタンを何度もクリックできるのが問題。せめて、「処理中」くらいは表現する
+    - TODO: ボタンの表現をリッチする     : できれば、フロートで常に表示されているようにしたい。
+    - TODO: アイコン                     : 渡すときの感動はここにあると思う
+    - TODO: ビルド                       : pyinstaller でビルドして動くかどうか。pandas が邪魔になりそう。
     """
     print('処理開始')
+    t0 = time.time()
     
     url = driver.current_url
     all_list_urls = fpg.list.fetch_all_list_page_urls(url)
 
     result = []
-    for list_idx, list_url in enumerate(all_list_urls):  # HACK: 240302 少し遅いので、並行処理でやるといいかも？また、フロントエンドに処理状況を渡すといいかも？
-        each_urls = fpg.list.fetch_all_each_page_urls(list_url)
-        for each_idx, each_url in enumerate(each_urls):
-            temp_result = {
-                'list_idx': list_idx,  # INFO: 240302 並行処理で後から並び替え用にも使用
-                'each_idx': each_idx,
-            }
-            temp = fpg.each.fetch_info_from_each_page(each_url)
-            if temp is not None:
-                temp_result.update(temp)
-                result.append(temp_result)  # TODO: 240302 都度データ書き込みがいいかも？sqlite とかに。もしくは、csv に書き足してもいいかも？
+    for list_idx, list_url in enumerate(all_list_urls):  # TODO: 240302 並行処理で実施する https://tokitsubaki.com/python-asynchronous/460/
+        fpg.fetch_data_from_list_url(list_url=list_url, list_idx=list_idx)
     
     result = pd.DataFrame(result)
     result.to_csv('test_.csv', encoding='shift-jis')  # TODO: 240302 ファイル名に検索や、プログラムバージョンを含めるといいかも？
+    print(time.time() - t0)  # TODO: 240303 log 的なところに吐き出せるようにせよ。
 
 
 ####

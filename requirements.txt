@@ -4,6 +4,7 @@ jupyter
 pandas
 fastapi
 uvicorn[standard]
+sqlalchemy
 
 pytest
 mypy
