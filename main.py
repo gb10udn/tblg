@@ -3,7 +3,9 @@ from starlette.middleware.cors import CORSMiddleware
 from selenium import webdriver
 import uvicorn
 import threading
+from concurrent.futures import ThreadPoolExecutor
 import time
+import datetime
 import pandas as pd  # HACK: 240302 pyinstaller 的に重くなるので、sqlalchemy でやるなどしたらいいかも？
 
 import fpg
@@ -39,15 +41,25 @@ def run():
     t0 = time.time()
     
     url = driver.current_url
+    pass  # TODO: 240303 検索条件を保存できるようにする。
     all_list_urls = fpg.list.fetch_all_list_page_urls(url)
 
-    result = []
-    for list_idx, list_url in enumerate(all_list_urls):  # TODO: 240302 並行処理で実施する https://tokitsubaki.com/python-asynchronous/460/
-        fpg.fetch_data_from_list_url(list_url=list_url, list_idx=list_idx)
-    
-    result = pd.DataFrame(result)
-    result.to_csv('test_.csv', encoding='shift-jis')  # TODO: 240302 ファイル名に検索や、プログラムバージョンを含めるといいかも？
-    print(time.time() - t0)  # TODO: 240303 log 的なところに吐き出せるようにせよ。
+    MAX_THREAD_NUM = 5  # HACK: 240303 最適な数値を選択する or フロントから変更できるようにする。
+    now = datetime.datetime.strftime(datetime.datetime.now(), '%Y%m%d_%H%M%S')
+    dst = f'{now}.db'
+
+    pool = ThreadPoolExecutor(max_workers=MAX_THREAD_NUM)
+    for list_idx, list_url in enumerate(all_list_urls):
+        kwargs = {
+            'url': list_url,
+            'stream_dst': dst,
+            'list_idx': list_idx,
+        }
+        pool.submit(fpg.fetch_data_from_list_url, **kwargs)
+    pool.shutdown()
+    print(time.time() - t0)  # TODO: 240303 log 的なところに吐き出せるようにせよ。また、timer クラスを作ってもいいかも？
+
+    pass  # TODO: 240303 pandas 使わずに、csv に、shift-jis で出力する。
 
 
 ####

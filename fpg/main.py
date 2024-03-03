@@ -28,6 +28,6 @@ def fetch_data_from_list_url(url: str, * , stream_dst: str | None=None, list_idx
             temp_result.update(temp)
             result.append(temp_result)
             if stream_dst is not None:
-                db.each.insert_one(args=temp, db_path=stream_dst)
+                db.each.insert_one(args=temp_result, db_path=stream_dst)
 
     return result

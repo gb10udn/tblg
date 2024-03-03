@@ -1,11 +1,11 @@
 beautifulsoup4
 selenium
-jupyter
 pandas
 fastapi
 uvicorn[standard]
 sqlalchemy
 
+jupyter
 pytest
 mypy
 types-requests
