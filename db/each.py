@@ -28,7 +28,7 @@ class EachUrlTableHandler:
 
         for col in add_cols:
             if not hasattr(EachUrlTable, col):
-                setattr(EachUrlTable, col, Column(String))  # HACK: 240303 一度、.db ファイル生成後に新たにカラム追加はエラーっぽい。そこのハンドリングを記述する。
+                setattr(EachUrlTable, col, Column(String))
 
         EachUrlTable.metadata.create_all(self._engine)
     
@@ -66,13 +66,11 @@ class EachUrlTable(Base):
     each_url (詳細のデータが格納されたページの URL) から取得したデータを格納するテーブル定義。
     取得するデータ (Ex. オープン日、ジャンル 等) は動的に変更できるため、その部分は後から追加するものとした。
     """
-    __tablename__ = 'each_url'  # TODO: 240303 これとは別に、検索条件を格納するテーブルを準備してもいいかも？
+    __tablename__ = 'each_url'
     url = Column(String, primary_key=True)
     list_idx = Column(Integer)
     each_idx = Column(Integer)
     created_at = Column(String, nullable=False)
-    updated_at = Column(String, default=None)
-    updated_num = Column(Integer, nullable=False, default=0)
 
 
 ####

@@ -6,9 +6,10 @@ import threading
 from concurrent.futures import ThreadPoolExecutor
 import time
 import datetime
-import pandas as pd  # HACK: 240302 pyinstaller 的に重くなるので、sqlalchemy でやるなどしたらいいかも？
+import os
 
 import fpg
+import db
 
 
 app = FastAPI()
@@ -31,7 +32,6 @@ def run():
 
     240303
     ------
-    - TODO: 並行処理                     : 現状、1sec/件 でさすがに遅い気がする 
     - TODO: 処理状況をフロントに通知する : ボタンを何度もクリックできるのが問題。せめて、「処理中」くらいは表現する
     - TODO: ボタンの表現をリッチする     : できれば、フロートで常に表示されているようにしたい。
     - TODO: アイコン                     : 渡すときの感動はここにあると思う
@@ -41,25 +41,27 @@ def run():
     t0 = time.time()
     
     url = driver.current_url
-    pass  # TODO: 240303 検索条件を保存できるようにする。
+    pass  # TODO: 240303 検索条件を保存できるようにする。 (url から取得する関数を作る。)
     all_list_urls = fpg.list.fetch_all_list_page_urls(url)
 
-    MAX_THREAD_NUM = 5  # HACK: 240303 最適な数値を選択する or フロントから変更できるようにする。
+    MAX_THREAD_NUM = 5
     now = datetime.datetime.strftime(datetime.datetime.now(), '%Y%m%d_%H%M%S')
-    dst = f'{now}.db'
+    sql_dst = f'logs/{now}.db'
+    sql_dst_dir = os.path.dirname(sql_dst)
+    os.makedirs(sql_dst_dir, exist_ok=True)
 
     pool = ThreadPoolExecutor(max_workers=MAX_THREAD_NUM)
     for list_idx, list_url in enumerate(all_list_urls):
         kwargs = {
             'url': list_url,
-            'stream_dst': dst,
+            'stream_dst': sql_dst,
             'list_idx': list_idx,
         }
         pool.submit(fpg.fetch_data_from_list_url, **kwargs)
     pool.shutdown()
-    print(time.time() - t0)  # TODO: 240303 log 的なところに吐き出せるようにせよ。また、timer クラスを作ってもいいかも？
 
-    pass  # TODO: 240303 pandas 使わずに、csv に、shift-jis で出力する。
+    run_time = time.time() - t0  # TODO: 240303 logs ディレクトリの sqlite3 の別のテーブルにデータを格納する。
+    db.common.export(src=sql_dst, dst=f'{now}.csv')
 
 
 ####
@@ -74,7 +76,8 @@ def create_button_daemon(*, sleep_time=0.5):
     threading で並行処理として呼ばれる想定。
     """
 
-    # TODO: 240302 この部分をもう少しリッチにすると、使いやすくなる気がする。
+    # TODO: 240303 処理中は、button を押せないようにする。
+    # TODO: 240303 進捗がどんなもんかを表示できるようにする。
     JS_SCRIPT = '''
         let button = document.createElement("button");
         button.innerHTML = "ダウンロード";

@@ -3,8 +3,13 @@
 .mypy_cache/*
 .pytest_cache/*
 .venv/*
+logs/*
+build/*
+dist/*
 *.ipynb
 *.exe
 *.csv
 *.xlsx
 *.db
+*.cmd
+*.spec
