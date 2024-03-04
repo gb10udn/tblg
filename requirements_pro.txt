@@ -5,9 +5,3 @@ fastapi
 uvicorn[standard]
 sqlalchemy
 pyinstaller
-
-jupyter
-pytest
-mypy
-types-requests
-types-beautifulsoup4
