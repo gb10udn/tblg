@@ -23,7 +23,7 @@ class ListPage:
             return [a['href'] for a in a_list]
     
 
-    def _fetch_total_url_num(self) -> int | None:
+    def fetch_total_url_num(self) -> int | None:
         """
         全何件が検索結果として表示されているかを確認する。
         bs4 で値取得に失敗すると、None を返す。(ページの DOM 要素が更新されて失敗したケースを想定。)
@@ -56,7 +56,7 @@ class ListPage:
 
         else:
             second_page_url = li_list[1].find('a')['href']
-            total_url_num = self._fetch_total_url_num()
+            total_url_num = self.fetch_total_url_num()
             if total_url_num is not None:
                 page_max = math.ceil(total_url_num / 20)
                 first_page_url = self._url
@@ -82,3 +82,8 @@ def fetch_all_each_page_urls(url: str) -> list[str]:
         return list_page.fetch_all_each_page_urls()
     except:
         return []
+
+
+def fetch_total_url_num(url: str) -> int | None:
+    list_page = ListPage(url)
+    return list_page.fetch_total_url_num()

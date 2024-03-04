@@ -1,5 +1,6 @@
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
+from sqlalchemy.sql import text
 import datetime
 
 
@@ -90,3 +91,10 @@ def insert_one(args: dict[str, str], db_path: str):
         hdr.insert_one(args=args)  # HACK: 240303 エラーハンドリングを記述せよ。
     finally:
         hdr.close()
+
+
+def count(path: str) -> int:
+    engine = create_engine('sqlite:///{}'.format(path), echo=False)  # FIXME: 240304 path が非存在のケースの記述が必要？
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    return len(list(session.execute(text("select * from each_url"))))

@@ -29,14 +29,9 @@ def read_root():
 def run():
     """
     食べログで必要データを取得する処理を開始する。
-
-    240303
-    ------
-    - TODO: 処理状況をフロントに通知する : ボタンを何度もクリックできるのが問題。せめて、「処理中」くらいは表現する
-    - TODO: ボタンの表現をリッチする     : できれば、フロートで常に表示されているようにしたい。
-    - TODO: アイコン                     : 渡すときの感動はここにあると思う
-    - TODO: ビルド                       : pyinstaller でビルドして動くかどうか。pandas が邪魔になりそう。
     """
+    global sql_dst
+
     print('処理開始')
     t0 = time.time()
     
@@ -64,38 +59,84 @@ def run():
     db.common.export(src=sql_dst, dst=f'{now}.csv')
 
 
+@app.get('/status')
+def status():
+    """
+    ダウンロード中の進捗状況を取得する。
+    """
+    count = db.each.count(sql_dst)
+    total = fpg.list.fetch_total_url_num(driver.current_url)
+    return ' ダウンロード中: {} / {}'.format(count, total)
+
+
 ####
 
 
-global driver
-
-
-def create_button_daemon(*, sleep_time=0.5):
+def create_button_daemon(*, sleep_time=0.5, read_js_file=False):  # HACK: 240305 ビルド時に手動で組み込むのは少し手間かな。
     """
     url が更新されていれば、バックエンドと通信するボタンを設置する関数。
     threading で並行処理として呼ばれる想定。
     """
 
-    # TODO: 240303 処理中は、button を押せないようにする。
-    # TODO: 240303 進捗がどんなもんかを表示できるようにする。
-    JS_SCRIPT = '''
-        let button = document.createElement("button");
-        button.innerHTML = "ダウンロード";
-        button.onclick = () => {
-            fetch("http://localhost:5000/run");
-        };
-        document.body.insertBefore(button, document.body.firstChild);
-    '''
+    if read_js_file == True:
+        JS_BUTTON_SCRIPT_PATH = './ui.js'
+        with open(JS_BUTTON_SCRIPT_PATH, 'r', encoding='utf-8') as f:
+            js_script = f.read()
+
+    else:
+        js_script = '''let button = document.createElement('button');
+button.innerHTML = 'ダウンロード';
+document.body.insertBefore(button, document.body.firstChild);
+
+let text = document.createTextNode('');
+document.body.insertBefore(text, button.nextSibling);
+document.body.insertBefore(button, text);
+
+button.onclick = () => {
+  button.disabled = true
+
+  const intervalId = setInterval(() => {
+    fetch("http://localhost:5000/status")
+      .then(response => response.text())
+      .then(data => {
+        if (data.startsWith('"')) {
+          data = data.slice(1)
+        }
+        if (data.endsWith('"')) {
+          data = data.slice(0, -1)
+        }
+        text.nodeValue = data
+      })
+      .catch(err => {
+        console.error('Error -> ', err);
+      });    
+  }, 1000);
+
+
+  fetch('http://localhost:5000/run').then(_ => {
+    button.disabled = false;
+    clearInterval(intervalId);
+    text.nodeValue = ' ダウンロード完了しました。'
+
+  }).catch((err) => {
+    button.disabled = false;
+    clearInterval(intervalId);
+    console.error('Error -> ', err);
+    text.nodeValue = ' エラー発生しました。'
+  });
+};'''
 
     url = ''
     while True:
         if (driver.current_url != url) and ('https://tabelog.com/' in driver.current_url) and ('rstLst/?' in driver.current_url):
-            driver.execute_script(JS_SCRIPT)
+            driver.execute_script(js_script)
+
         url = driver.current_url
         time.sleep(sleep_time)
 
 
 if __name__ == '__main__':
+    global driver
     driver = webdriver.Chrome()
     driver.get('https://tabelog.com/')
     
