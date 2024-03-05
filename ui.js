@@ -1,8 +1,8 @@
-let button = document.createElement('button');
+let button = document.createElement('button');  // HACK: 240305 const で行けそう
 button.innerHTML = 'ダウンロード';
 document.body.insertBefore(button, document.body.firstChild);
 
-let text = document.createTextNode('');
+let text = document.createTextNode('');  // HACK: 240305 const で行けそう
 document.body.insertBefore(text, button.nextSibling);
 document.body.insertBefore(button, text);
 
@@ -39,3 +39,5 @@ button.onclick = () => {
     text.nodeValue = ' エラー発生しました。'
   });
 };
+
+// FIXME: 240305 画面閉じる際にバックエンドに通知して、バックエンドプロセスを終了させるといい
