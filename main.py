@@ -2,16 +2,20 @@ from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from selenium import webdriver
 import uvicorn
+import requests
 import threading
 from concurrent.futures import ThreadPoolExecutor
 import time
 import datetime
 import os
 import sys
+import signal
 
 import fpg
 import db
 
+
+sys.stdout = open(os.devnull, 'w')  # INFO: 240305 --nocosole で必要。(FastAPI がエラーで落ちる。)
 
 app = FastAPI()
 app.add_middleware(
@@ -70,10 +74,32 @@ def status():
     return ' ダウンロード中: {} / {}'.format(count, total)
 
 
-####
+@app.get('/killme')
+def killme():
+    """
+    Python に起因するプロセスを終了するための関数。
+    """
+    try:
+        driver.quit()
+    except:
+        pass
+    try:
+        event.clear()
+    except:
+        pass
+    pid = os.getpid()
+    os.kill(pid, signal.SIGTERM)
 
 
-def create_button_daemon(*, sleep_time=0.5):
+@app.get('/pid')
+def pid():
+    """
+    プロセス id 取得。強制終了する用途。
+    """
+    return os.getpid()
+
+
+def create_button_daemon(*, sleep_time=0.5) -> None:
     """
     url が更新されていれば、バックエンドと通信するボタンを設置する関数。
     threading で並行処理として呼ばれる想定。
@@ -90,8 +116,10 @@ def create_button_daemon(*, sleep_time=0.5):
     while True:
         if (driver.current_url != url) and ('https://tabelog.com/' in driver.current_url) and ('rstLst/?' in driver.current_url):
             driver.execute_script(js_script)
-
-        url = driver.current_url
+        try:
+            url = driver.current_url
+        except:
+            break  # INFO: 240305 webdriver が閉じられると、こっちに流れてくる (driver.current_url が取得できないため)
         time.sleep(sleep_time)
 
 
@@ -100,12 +128,13 @@ if __name__ == '__main__':
     driver = webdriver.Chrome()  # FIXME: 240305 「Chromeは自動テストソフトウェアによって制御されています」を削除する
     driver.get('https://tabelog.com/')
     
+    global event
     event = threading.Event()
     sub_thread = threading.Thread(target=create_button_daemon, daemon=True)
     sub_thread.start()
     event.set()
 
     try:
-        uvicorn.run(app, host="127.0.0.1", port=5000)  # TODO: 240302 空いたポート番号を発見して割り当てるようにせよ。
+        requests.get('http://localhost:5000/killme')  # INFO: 240305 前のプロセスが残っている場合は削除する。
     finally:
-        event.clear()
+        uvicorn.run(app, host="127.0.0.1", port=5000)  # TODO: 240302 空いたポート番号を発見して割り当てるようにせよ。
