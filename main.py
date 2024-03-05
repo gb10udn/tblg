@@ -7,6 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 import time
 import datetime
 import os
+import sys
 
 import fpg
 import db
@@ -72,59 +73,18 @@ def status():
 ####
 
 
-def create_button_daemon(*, sleep_time=0.5, read_js_file=False):  # HACK: 240305 ビルド時に手動で組み込むのは少し手間かな。
+def create_button_daemon(*, sleep_time=0.5):
     """
     url が更新されていれば、バックエンドと通信するボタンを設置する関数。
     threading で並行処理として呼ばれる想定。
     """
-
-    if read_js_file == True:
-        JS_BUTTON_SCRIPT_PATH = './ui.js'
-        with open(JS_BUTTON_SCRIPT_PATH, 'r', encoding='utf-8') as f:
-            js_script = f.read()
-
+    call_from_pyinstaller = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')  # INFO: 240305 https://www.pyinstaller.org/en/stable/runtime-information.html?highlight=sys._MEIPASS#run-time-information
+    if call_from_pyinstaller == True:
+        js_ui_script_path = '{}/ui.js'.format(sys._MEIPASS)
     else:
-        js_script = '''let button = document.createElement('button');
-button.innerHTML = 'ダウンロード';
-document.body.insertBefore(button, document.body.firstChild);
-
-let text = document.createTextNode('');
-document.body.insertBefore(text, button.nextSibling);
-document.body.insertBefore(button, text);
-
-button.onclick = () => {
-  button.disabled = true
-
-  const intervalId = setInterval(() => {
-    fetch("http://localhost:5000/status")
-      .then(response => response.text())
-      .then(data => {
-        if (data.startsWith('"')) {
-          data = data.slice(1)
-        }
-        if (data.endsWith('"')) {
-          data = data.slice(0, -1)
-        }
-        text.nodeValue = data
-      })
-      .catch(err => {
-        console.error('Error -> ', err);
-      });    
-  }, 1000);
-
-
-  fetch('http://localhost:5000/run').then(_ => {
-    button.disabled = false;
-    clearInterval(intervalId);
-    text.nodeValue = ' ダウンロード完了しました。'
-
-  }).catch((err) => {
-    button.disabled = false;
-    clearInterval(intervalId);
-    console.error('Error -> ', err);
-    text.nodeValue = ' エラー発生しました。'
-  });
-};'''
+        js_ui_script_path = './ui.js'
+    with open(js_ui_script_path, 'r', encoding='utf-8') as f:
+        js_script = f.read()
 
     url = ''
     while True:
@@ -137,7 +97,7 @@ button.onclick = () => {
 
 if __name__ == '__main__':
     global driver
-    driver = webdriver.Chrome()
+    driver = webdriver.Chrome()  # FIXME: 240305 「Chromeは自動テストソフトウェアによって制御されています」を削除する
     driver.get('https://tabelog.com/')
     
     event = threading.Event()

@@ -1,3 +1,3 @@
 CALL .\.pro\Scripts\activate
-pyinstaller main.py --icon=icon.ico --onefile
+pyinstaller main.py --icon=icon.ico --add-data=.\ui.js:.\ --onefile
 PAUSE

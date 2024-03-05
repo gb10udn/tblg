@@ -25,6 +25,8 @@ def export(src: str, dst: str, *, encoding: str='shift-jis') -> None:  # HACK: 2
             if not hasattr(EachUrlTable, key):
                 setattr(EachUrlTable, key, Column(String))  # INFO: 240304 クラスで定義されていないものはすべて String であるものとする。
         # [END] set up mapper
+                
+        pass  # TODO: 240305 ユーザーに不要なデータを落とす。(list_idx, each_idx, created_at はユーザーには必要ない気がする。)
 
         dir_path = os.path.dirname(src)
         os.makedirs(dir_path,exist_ok=True)
