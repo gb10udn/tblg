@@ -93,8 +93,8 @@ def insert_one(args: dict[str, str], db_path: str):
         hdr.close()
 
 
-def count(path: str) -> int:
+def count(path: str) -> int:  # HACK: 240305 common に書く内容な気がしてきた。
     engine = create_engine('sqlite:///{}'.format(path), echo=False)  # FIXME: 240304 path が非存在のケースの記述が必要？
     Session = sessionmaker(bind=engine)
-    session = Session()
+    session = Session()  # FIXME: 240305 session 等のクローズ処理ができていない気がする
     return len(list(session.execute(text("select * from each_url"))))
