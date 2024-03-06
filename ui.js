@@ -28,9 +28,9 @@ button.onclick = () => {
 
 
   fetch('http://localhost:5000/run').then(_ => {
-    button.disabled = false;
     clearInterval(intervalId);
     setTimeout(() => {
+      button.disabled = false;
       text.nodeValue = ' ダウンロード完了しました。'
     }, 3000)
 

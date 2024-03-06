@@ -97,4 +97,4 @@ def count(path: str) -> int:  # HACK: 240305 common に書く内容な気がし�
     engine = create_engine('sqlite:///{}'.format(path), echo=False)  # FIXME: 240304 path が非存在のケースの記述が必要？
     Session = sessionmaker(bind=engine)
     session = Session()  # FIXME: 240305 session 等のクローズ処理ができていない気がする
-    return len(list(session.execute(text("select * from each_url"))))
+    return len(list(session.execute(text("select * from each_url"))))  # FIXME: 240306 db 格納前に呼ばれるとエラーで落ちるので、その場合の処理を記述すること。
