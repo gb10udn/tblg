@@ -30,7 +30,7 @@ button.onclick = () => {
   fetch('http://localhost:5000/run').then(_ => {
     button.disabled = false;
     clearInterval(intervalId);
-    text.nodeValue = ' ダウンロード完了しました。'
+    text.nodeValue = ' ダウンロード完了しました。'  // FIXME: 240306 即実行すると、ダウンロード完了しましたの処理の後に、fetch の戻りが来て、更新される場合があるっぽいので修正せよ。
 
   }).catch((err) => {
     button.disabled = false;

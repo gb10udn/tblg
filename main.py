@@ -125,7 +125,9 @@ def create_button_daemon(*, sleep_time=0.5) -> None:
 
 if __name__ == '__main__':
     global driver
-    driver = webdriver.Chrome()  # FIXME: 240305 「Chromeは自動テストソフトウェアによって制御されています」を削除する
+    options = webdriver.ChromeOptions()
+    options.add_experimental_option("excludeSwitches", ['enable-automation'])  # INFO: 240306 「Chromeは自動テストソフトウェアによって制御されています」を非表示にする。
+    driver = webdriver.Chrome(options=options)
     driver.get('https://tabelog.com/')
     
     global event
