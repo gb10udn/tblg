@@ -24,7 +24,7 @@ button.onclick = () => {
       .catch(err => {
         console.error('Error -> ', err);
       });    
-  }, 1000);
+  }, 2000);
 
 
   fetch('http://localhost:5000/run').then(_ => {
@@ -32,7 +32,7 @@ button.onclick = () => {
     clearInterval(intervalId);
     setTimeout(() => {
       text.nodeValue = ' ダウンロード完了しました。'
-    }, 2000)
+    }, 3000)
 
   }).catch((err) => {
     button.disabled = false;

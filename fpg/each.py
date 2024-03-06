@@ -30,7 +30,7 @@ class EachPage:
                 th = tr.find('th')
                 td = tr.find('td')
                 if (th is not None) and (td is not None) and th.text in items:
-                    result[th.text] = td.text.strip()  # TODO: 240301 場合によっては、パーサーいるかも？
+                    result[th.text] = td.text.strip()  # TODO: 240301 場合によっては、パーサーいるかも？ (Ex. 予算だとパーサーないとデータが見にくかった。)
 
         return result
     
@@ -84,7 +84,7 @@ class EachPage:
         return result
 
 
-def fetch_info_from_each_page(url: str, *, items=['店名', 'オープン日']) -> dict | None:  # TODO: 240302 '店名' とかは、コンフィグファイルで渡すといいかも？
+def fetch_info_from_each_page(url: str, *, items=['店名', 'オープン日', 'ジャンル']) -> dict | None:  # TODO: 240302 '店名' とかは、コンフィグファイルで渡す？もしくはデータクラス等を使って、ロバストに作る？
     """
     詳細の記載ある各ページから必要情報を取得する。
     """
