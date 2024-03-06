@@ -1,8 +1,8 @@
-from sqlalchemy import create_engine, Column, Integer, String
-from sqlalchemy.orm import sessionmaker, DeclarativeBase
+from sqlalchemy import create_engine, Integer, String
+from sqlalchemy.orm import sessionmaker, DeclarativeBase, mapped_column
 from sqlalchemy.sql import text
 import datetime
-
+from typing import Any
 
 class EachUrlTableHandler:
     def __init__(self, *, add_cols: list[str]=[], db_path: str='test.db'):  # HACK: 240303 .db ファイルが存在する場合の挙動を定義すること。
@@ -29,7 +29,7 @@ class EachUrlTableHandler:
 
         for col in add_cols:
             if not hasattr(EachUrlTable, col):
-                setattr(EachUrlTable, col, Column(String))
+                setattr(EachUrlTable, col, mapped_column(String))
 
         EachUrlTable.metadata.create_all(self._engine)
     
@@ -38,7 +38,7 @@ class EachUrlTableHandler:
         return str(datetime.datetime.strftime(datetime.datetime.now(), self._DATETIME_FORMAT))
     
 
-    def insert_one(self, args: dict[str, str]):
+    def insert_one(self, args: dict[str, Any]):
         """
         データを入力する関数。
         """
@@ -68,16 +68,16 @@ class EachUrlTable(Base):
     取得するデータ (Ex. オープン日、ジャンル 等) は動的に変更できるため、その部分は後から追加するものとした。
     """
     __tablename__ = 'each_url'
-    url = Column(String, primary_key=True)
-    list_idx = Column(Integer)
-    each_idx = Column(Integer)
-    created_at = Column(String, nullable=False)
+    url = mapped_column(String, primary_key=True)
+    list_idx = mapped_column(Integer)
+    each_idx = mapped_column(Integer)
+    created_at = mapped_column(String, nullable=False)
 
 
 ####
     
 
-def insert_one(args: dict[str, str], db_path: str):
+def insert_one(args: dict[str, Any], db_path: str) -> None:
     """
     sqlite3 にデータを格納する関数。
     db_path が存在する場合、db_path に含まれないカラムが、args のキーに含まれる場合、エラーを返すので注意すること。  # HACK: 240303 正しくエラーを通知するようにする。

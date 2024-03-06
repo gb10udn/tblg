@@ -106,7 +106,7 @@ def create_button_daemon(*, sleep_time=0.5) -> None:
     """
     call_from_pyinstaller = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')  # INFO: 240305 https://www.pyinstaller.org/en/stable/runtime-information.html?highlight=sys._MEIPASS#run-time-information
     if call_from_pyinstaller == True:
-        js_ui_script_path = '{}/ui.js'.format(sys._MEIPASS)
+        js_ui_script_path = '{}/ui.js'.format(sys._MEIPASS)  # type: ignore  # INFO: 2403006 to ignore mypy check
     else:
         js_ui_script_path = './ui.js'
     with open(js_ui_script_path, 'r', encoding='utf-8') as f:

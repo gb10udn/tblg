@@ -1,6 +1,7 @@
 import requests
-from bs4 import BeautifulSoup, NavigableString
+from bs4 import BeautifulSoup
 import re
+from typing import Any
 
 
 class EachPage:
@@ -50,11 +51,11 @@ class EachPage:
             'bookmarked_num': 2,
         }
 
-        header = self._soup.find(id='js-header-rating')
+        header: Any = self._soup.find(id='js-header-rating')  # INFO: 240306 .find() は、Tag | NavigableString | None を返すらしい。NavigableString を mypy でうまく扱え無かったため、Any 型とした。
         if header is None:
             return result
         
-        li_list = header.find_all('li')  # HACK: 240302 mypy のエラーを落とすこと。 ref: https://stackoverflow.com/questions/7591535/beautifulsoup-attributeerror-navigablestring-object-has-no-attribute-name
+        li_list = header.find_all('li')
         if li_list is None:
             return result
         
