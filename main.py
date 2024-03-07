@@ -10,12 +10,13 @@ import datetime
 import os
 import sys
 import signal
+import json
 
 import fpg
 import db
 
 
-sys.stdout = open(os.devnull, 'w')  # INFO: 240305 --nocosole で必要。(FastAPI がエラーで落ちる。)
+sys.stdout = open(os.devnull, 'w')  # INFO: 240305 --nocosole で必要。(FastAPI がエラーで落ちる。)  # HACK: 240307 pyinstaller の場合だけでいいような気もする。
 
 app = FastAPI()
 app.add_middleware(
@@ -35,13 +36,13 @@ def run():
     """
     食べログで必要データを取得する処理を開始する。
     """
-    # [START] set up parames
-    MAX_THREAD_NUM = 5
-    RESTRICT_URL_NUM = 5  # INFO: 240307 お試し版では、2 や、3 にしておく。None にすると、制約かからない。
-    # [END] set up parames
+    # [START] set up config
+    config_path = obtain_ref_path(file_name='setting.json')
+    with open(config_path, 'r') as f:
+        config = json.load(f)
+    # [END] set up config
 
     global sql_dst
-    print('処理開始')
     t0 = time.time()
     
     url = driver.current_url
@@ -53,8 +54,8 @@ def run():
     sql_dst_dir = os.path.dirname(sql_dst)
     os.makedirs(sql_dst_dir, exist_ok=True)
 
-    pool = ThreadPoolExecutor(max_workers=MAX_THREAD_NUM)
-    for list_idx, list_url in enumerate(all_list_urls[:RESTRICT_URL_NUM]):  # TODO: 240307 この部分に制約を付けて、無料お試し版として販売する？
+    pool = ThreadPoolExecutor(max_workers=config['max_thread_num'])
+    for list_idx, list_url in enumerate(all_list_urls[:config['restrict_url_num']]):
         kwargs = {
             'url': list_url,
             'stream_dst': sql_dst,
@@ -113,7 +114,7 @@ def create_button_daemon(*, sleep_time=0.5) -> None:
 
     url = ''
     while True:
-        if (driver.current_url != url) and ('https://tabelog.com/' in driver.current_url) and ('rstLst/?' in driver.current_url):
+        if (driver.current_url != url) and ('https://tabelog.com/' in driver.current_url) and ('rstLst/?' in driver.current_url):  # FIXME: 240307 get パラメタが存在しないケースもあった。。。
             driver.execute_script(js_script)
         try:
             url = driver.current_url
@@ -136,7 +137,7 @@ def obtain_ref_path(file_name: str, *, base_dir: str='./ref') -> str:
 
 if __name__ == '__main__':
     global driver
-    options = webdriver.ChromeOptions()
+    options = webdriver.ChromeOptions()  # HACK: 240307 何かしらのトラブルに備えて、try - excecpt で書いて、通常モードでの起動も書いた方がいいかも？
     options.add_experimental_option("excludeSwitches", ['enable-automation'])  # INFO: 240306 「Chromeは自動テストソフトウェアによって制御されています」を非表示にする。
     driver = webdriver.Chrome(options=options)
     driver.get('https://tabelog.com/')

@@ -35,7 +35,7 @@ class EachPage:
         return result
     
 
-    def fetch_rating_and_kuchikomi_num_and_bookmarked_num(self) -> dict[str, int | float | None]:
+    def fetch_rating_and_kuchikomi_num_and_bookmarked_num(self) -> dict[str, int | float | None]:  # HACK: 240307 戻り値を、データクラスで定義できる箇所な気もする。
         """
         ヘッダ部から、評価点、口コミ数、ブックマーク登録数を取得する。
         """
@@ -94,6 +94,6 @@ def fetch_info_from_each_page(url: str, *, items=['店名', 'オープン日', '
         return None
     
     result: dict = {'url': url}
-    result.update(ep.fetch_info_from_table(items))
+    result.update(ep.fetch_info_from_table(items))  # TODO: 240307 オープン日は、yyyy/mm/dd のようにフォーマット統一する方が良い (エクセルソートが効かない。)
     result.update(ep.fetch_rating_and_kuchikomi_num_and_bookmarked_num())
     return result
