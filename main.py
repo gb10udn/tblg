@@ -35,8 +35,12 @@ def run():
     """
     食べログで必要データを取得する処理を開始する。
     """
-    global sql_dst
+    # [START] set up parames
+    MAX_THREAD_NUM = 5
+    RESTRICT_URL_NUM = 5  # INFO: 240307 お試し版では、2 や、3 にしておく。None にすると、制約かからない。
+    # [END] set up parames
 
+    global sql_dst
     print('処理開始')
     t0 = time.time()
     
@@ -44,14 +48,13 @@ def run():
     pass  # TODO: 240303 検索条件を保存できるようにする。 (url から取得する関数を作る。)
     all_list_urls = fpg.list.fetch_all_list_page_urls(url)
 
-    MAX_THREAD_NUM = 5
     now = datetime.datetime.strftime(datetime.datetime.now(), '%Y%m%d_%H%M%S')
     sql_dst = f'logs/{now}.db'
     sql_dst_dir = os.path.dirname(sql_dst)
     os.makedirs(sql_dst_dir, exist_ok=True)
 
     pool = ThreadPoolExecutor(max_workers=MAX_THREAD_NUM)
-    for list_idx, list_url in enumerate(all_list_urls):
+    for list_idx, list_url in enumerate(all_list_urls[:RESTRICT_URL_NUM]):  # TODO: 240307 この部分に制約を付けて、無料お試し版として販売する？
         kwargs = {
             'url': list_url,
             'stream_dst': sql_dst,
@@ -104,11 +107,7 @@ def create_button_daemon(*, sleep_time=0.5) -> None:
     url が更新されていれば、バックエンドと通信するボタンを設置する関数。
     threading で並行処理として呼ばれる想定。
     """
-    call_from_pyinstaller = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')  # INFO: 240305 https://www.pyinstaller.org/en/stable/runtime-information.html?highlight=sys._MEIPASS#run-time-information
-    if call_from_pyinstaller == True:
-        js_ui_script_path = '{}/ui.js'.format(sys._MEIPASS)  # type: ignore  # INFO: 2403006 to ignore mypy check
-    else:
-        js_ui_script_path = './ui.js'
+    js_ui_script_path = obtain_ref_path(file_name='ui.js')
     with open(js_ui_script_path, 'r', encoding='utf-8') as f:
         js_script = f.read()
 
@@ -121,6 +120,18 @@ def create_button_daemon(*, sleep_time=0.5) -> None:
         except:
             break  # INFO: 240305 webdriver が閉じられると、こっちに流れてくる (driver.current_url が取得できないため)
         time.sleep(sleep_time)
+
+
+def obtain_ref_path(file_name: str, *, base_dir: str='./ref') -> str:
+    """
+    ファイル名を指定すると、実行環境 (.exe or .py) に応じて適切なファイルパスを返す関数。
+    """
+    call_from_pyinstaller = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')  # INFO: 240305 https://www.pyinstaller.org/en/stable/runtime-information.html?highlight=sys._MEIPASS#run-time-information
+    if call_from_pyinstaller == True:
+        result = '{}/{}'.format(sys._MEIPASS, file_name)  # type: ignore  # INFO: 2403006 to ignore mypy check
+    else:
+        result = '{}/{}'.format(base_dir, file_name)
+    return result
 
 
 if __name__ == '__main__':
